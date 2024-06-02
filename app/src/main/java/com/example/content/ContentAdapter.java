@@ -1,6 +1,7 @@
 package com.example.content;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,18 +10,21 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.content.dataModel.ContentModel;
+import com.example.content.utility.ImageCache;
 
 import java.util.ArrayList;
 
 public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.MyViewHolder> {
+    private final ImageCache imageCache;
     Context context;
     ArrayList<ContentModel> result;
 
     public ContentAdapter(Context context) {
         this.context = context;
         result = new ArrayList<>();
+        imageCache = new ImageCache(context);
+
     }
 
     @NonNull
@@ -33,9 +37,19 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.MyViewHo
     @Override
     public void onBindViewHolder(@NonNull ContentAdapter.MyViewHolder holder, final int position) {
         String url = result.get(position).getThumbnail().getDomain()+"/"+result.get(position).getThumbnail().getBasePath()+"/0/"+result.get(position).getThumbnail().getKey();
-        Glide.with(context)
-                .load(url)
-                .into(holder.image);
+        imageCache.loadBitmap(url, new ImageCache.ImageLoadCallback() {
+            @Override
+            public void onBitmapLoaded(Bitmap bitmap) {
+                holder.image.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (bitmap != null) {
+                            holder.image.setImageBitmap(bitmap);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     @Override
